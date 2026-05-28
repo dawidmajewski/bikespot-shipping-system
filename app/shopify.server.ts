@@ -18,6 +18,16 @@ const appUrl =
   normalizeAppUrl(process.env.RAILWAY_STATIC_URL) ||
   normalizeAppUrl(process.env.RAILWAY_PUBLIC_DOMAIN);
 
+console.log("[shopify.server] Starting initialization");
+console.log("[shopify.server] NODE_ENV:", process.env.NODE_ENV);
+console.log("[shopify.server] HOST:", process.env.HOST);
+console.log("[shopify.server] PORT:", process.env.PORT);
+console.log("[shopify.server] SHOPIFY_APP_URL:", process.env.SHOPIFY_APP_URL);
+console.log("[shopify.server] appUrl resolved:", appUrl);
+console.log("[shopify.server] SHOPIFY_API_KEY set:", Boolean(process.env.SHOPIFY_API_KEY));
+console.log("[shopify.server] SHOPIFY_API_SECRET set:", Boolean(process.env.SHOPIFY_API_SECRET));
+console.log("[shopify.server] SCOPES:", process.env.SCOPES);
+
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
@@ -34,6 +44,8 @@ const shopify = shopifyApp({
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
     : {}),
 });
+
+console.log("[shopify.server] ShopAuthModule initialized, authPathPrefix: /auth");
 
 export default shopify;
 export const apiVersion = ApiVersion.October25;
