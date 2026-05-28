@@ -48,6 +48,16 @@ export function cartTransformRun(input) {
         cartLineId: bikeLine.id,
         expandedCartItems: [
           {
+            attributes: [
+              {
+                key: "Dopłata za pakowanie",
+                value: `+${packagingPrice} zł`,
+              },
+              {
+                key: "_bike_shipping_packaging_fee",
+                value: "true",
+              },
+            ],
             merchandiseId: bikeLine.merchandise.id,
             quantity: bikeLine.quantity,
             price: {
