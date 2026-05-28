@@ -413,7 +413,11 @@ const getPackagingVariantId = async (
   admin: AdminApiContext,
   appInstallationId: string,
   savedVariantId?: string | null,
+  price?: string,
 ) => {
+  let variantId: string | undefined;
+  let productId: string | undefined;
+
   if (savedVariantId) {
     const response = await admin.graphql(
       `#graphql
@@ -421,6 +425,9 @@ const getPackagingVariantId = async (
           node(id: $id) {
             ... on ProductVariant {
               id
+              product {
+                id
+              }
             }
           }
         }`,
@@ -433,7 +440,9 @@ const getPackagingVariantId = async (
     const responseJson = (await response.json()) as ProductVariantQueryResponse;
 
     if (responseJson.data?.node?.id) {
-      return responseJson.data.node.id;
+      variantId = responseJson.data.node.id;
+      productId =
+        (responseJson.data.node as { product?: { id: string } }).product?.id;
     }
 
     if (responseJson.errors?.length) {
@@ -443,102 +452,128 @@ const getPackagingVariantId = async (
     }
   }
 
-  const createResponse = await admin.graphql(
-    `#graphql
-      mutation BikeShippingPackagingProductCreate($title: String!, $iconDataUri: String!) {
-        productCreate(
-          product: {
-            title: $title
-            vendor: "BikeSpot"
-            productType: "Shipping fee"
-            status: ACTIVE
-            tags: ["bike-shipping-packaging-fee"]
-            images: [{ src: $iconDataUri }]
-          }
-        ) {
-          product {
-            variants(first: 1) {
-              nodes {
-                id
+  if (!variantId) {
+    const createResponse = await admin.graphql(
+      `#graphql
+        mutation BikeShippingPackagingProductCreate($title: String!, $iconDataUri: String!) {
+          productCreate(
+            product: {
+              title: $title
+              vendor: "BikeSpot"
+              productType: "Shipping fee"
+              status: ACTIVE
+              tags: ["bike-shipping-packaging-fee"]
+              images: [{ src: $iconDataUri }]
+            }
+          ) {
+            product {
+              id
+              variants(first: 1) {
+                nodes {
+                  id
+                }
               }
             }
+            userErrors {
+              field
+              message
+            }
           }
-          userErrors {
-            field
-            message
-          }
-        }
-      }`,
-    {
-      variables: {
-        title: BIKE_SHIPPING_PACKAGING_PRODUCT_TITLE,
-        iconDataUri:
-          "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pg0KPCEtLSBVcGxvYWRlZCB0bzogU1ZHIFJlcG8sIHd3dy5zdmdyZXBvLmNvbSwgR2VuZXJhdG9yOiBTVkcgUmVwbyBNaXhlciBUb29scyAtLT4NCjxzdmcgaGVpZ2h0PSI4MDBweCIgd2lkdGg9IjgwMHB4IiB2ZXJzaW9uPSIxLjEiIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiANCgkgdmlld0JveD0iMCAwIDQ2MCA0NjAiIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPGcgaWQ9IlhNTElEXzExMzVfIj4NCgk8cG9seWdvbiBpZD0iWE1MSURfMTEzNl8iIHN0eWxlPSJmaWxsOiNGQjk5MkQ7IiBwb2ludHM9IjIwMC4wMDIsMjEwIDIzMC4wMDIsNDYwIDQzMC4wMDIsMzQ1IDQzMC4wMDIsMTE1IAkiLz4NCgk8cG9seWdvbiBpZD0iWE1MSURfMTEzN18iIHN0eWxlPSJmaWxsOiNGRkI3Mzk7IiBwb2ludHM9IjIzMC4wMDEsMjAwIDIzMC4wMDEsNDYwIDMwLjAwMSwzNDUgMzAuMDAxLDExNSAJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExMzhfIiBzdHlsZT0iZmlsbDojRkI5OTJEOyIgcG9pbnRzPSIyOS45OTgsMTE1IDk5LjkxMywxNTUuMTk5IDIzMi4zNzMsMTE2LjI4IDI5OS45MDcsNDAuMTkzIDIyOS45OTgsMCAJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExMzlfIiBzdHlsZT0iZmlsbDojRjY3QTIxOyIgcG9pbnRzPSIxNjAuMDk2LDE4OS44MDQgMjI5Ljk5OCwyMzAgNDI5Ljk5OCwxMTUgMzYwLjA5OCw3NC43OTggMjI2LjY1NywxMTQuMjc5IA0KCQkJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExNDBfIiBzdHlsZT0iZmlsbDojRkVFQUMzOyIgcG9pbnRzPSIxNjAuMDk2LDI4OS44MDMgOTkuOTEzLDI1NS4xOTkgOTkuOTEzLDE1NS4xOTkgMTU3LjkyNCwxNTkuNzMgDQoJCTE2MC4wOTYsMTg5LjgwNCAJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExNDFfIiBzdHlsZT0iZmlsbDojRkZENDg4OyIgcG9pbnRzPSI5OS45MTMsMTU1LjE5OSAyOTkuOTA3LDQwLjE5MyAzNjAuMDk4LDc0Ljc5OCAxNjAuMDk2LDE4OS44MDQgCSIvPg0KPC9nPg0KPC9zdmc+",
+        }`,
+      {
+        variables: {
+          title: BIKE_SHIPPING_PACKAGING_PRODUCT_TITLE,
+          iconDataUri:
+            "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pg0KPCEtLSBVcGxvYWRlZCB0bzogU1ZHIFJlcG8sIHd3dy5zdmdyZXBvLmNvbSwgR2VuZXJhdG9yOiBTVkcgUmVwbyBNaXhlciBUb29scyAtLT4NCjxzdmcgaGVpZ2h0PSI4MDBweCIgd2lkdGg9IjgwMHB4IiB2ZXJzaW9uPSIxLjEiIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiANCgkgdmlld0JveD0iMCAwIDQ2MCA0NjAiIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPGcgaWQ9IlhNTElEXzExMzVfIj4NCgk8cG9seWdvbiBpZD0iWE1MSURfMTEzNl8iIHN0eWxlPSJmaWxsOiNGQjk5MkQ7IiBwb2ludHM9IjIwMC4wMDIsMjEwIDIzMC4wMDIsNDYwIDQzMC4wMDIsMzQ1IDQzMC4wMDIsMTE1IAkiLz4NCgk8cG9seWdvbiBpZD0iWE1MSURfMTEzN18iIHN0eWxlPSJmaWxsOiNGRkI3Mzk7IiBwb2ludHM9IjIzMC4wMDEsMjAwIDIzMC4wMDEsNDYwIDMwLjAwMSwzNDUgMzAuMDAxLDExNSAJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExMzhfIiBzdHlsZT0iZmlsbDojRkI5OTJEOyIgcG9pbnRzPSIyOS45OTgsMTE1IDk5LjkxMywxNTUuMTk5IDIzMi4zNzMsMTE2LjI4IDI5OS45MDcsNDAuMTkzIDIyOS45OTgsMCAJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExMzlfIiBzdHlsZT0iZmlsbDojRjY3QTIxOyIgcG9pbnRzPSIxNjAuMDk2LDE4OS44MDQgMjI5Ljk5OCwyMzAgNDI5Ljk5OCwxMTUgMzYwLjA5OCw3NC43OTggMjI2LjY1NywxMTQuMjc5IA0KCQkJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExNDBfIiBzdHlsZT0iZmlsbDojRkVFQUMzOyIgcG9pbnRzPSIxNjAuMDk2LDI4OS44MDMgOTkuOTEzLDI1NS4xOTkgOTkuOTEzLDE1NS4xOTkgMTU3LjkyNCwxNTkuNzMgDQoJCTE2MC4wOTYsMTg5LjgwNCAJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExNDFfIiBzdHlsZT0iZmlsbDojRkZENDg4OyIgcG9pbnRzPSI5OS45MTMsMTU1LjE5OSAyOTkuOTA3LDQwLjE5MyAzNjAuMDk4LDc0Ljc5OCAxNjAuMDk2LDE4OS44MDQgCSIvPg0KPC9nPg0KPC9zdmc+",
+        },
       },
-    },
-  );
-  const createJson =
-    (await createResponse.json()) as PackagingProductCreateResponse;
-  const createErrors = createJson.data?.productCreate?.userErrors ?? [];
-  const createErrorMessage = getGraphQLErrorMessage(
-    createErrors,
-    createJson.errors,
-  );
-  const variantId =
-    createJson.data?.productCreate?.product?.variants?.nodes?.[0]?.id;
-
-  if (createErrorMessage || !variantId) {
-    console.error("Unable to create bike shipping packaging product", {
-      graphQLErrors: createJson.errors,
-      userErrors: createErrors,
-    });
-
-    throw new Error(
-      createErrorMessage ??
-        "Nie udało się utworzyć produktu dla opakowania roweru.",
     );
+    const createJson =
+      (await createResponse.json()) as PackagingProductCreateResponse;
+    const createErrors = createJson.data?.productCreate?.userErrors ?? [];
+    const createErrorMessage = getGraphQLErrorMessage(
+      createErrors,
+      createJson.errors,
+    );
+    variantId =
+      createJson.data?.productCreate?.product?.variants?.nodes?.[0]?.id;
+    productId = createJson.data?.productCreate?.product?.id;
+
+    if (createErrorMessage || !variantId) {
+      console.error("Unable to create bike shipping packaging product", {
+        graphQLErrors: createJson.errors,
+        userErrors: createErrors,
+      });
+
+      throw new Error(
+        createErrorMessage ??
+          "Nie udało się utworzyć produktu dla opakowania roweru.",
+      );
+    }
+
+    const saveResponse = await admin.graphql(
+      `#graphql
+        mutation BikeShippingPackagingVariantSave(
+          $metafields: [MetafieldsSetInput!]!
+        ) {
+          metafieldsSet(metafields: $metafields) {
+            userErrors {
+              field
+              message
+              code
+            }
+          }
+        }`,
+      {
+        variables: {
+          metafields: [
+            {
+              namespace: BIKE_SHIPPING_METAFIELD_NAMESPACE,
+              key: BIKE_SHIPPING_PACKAGING_VARIANT_ID_KEY,
+              ownerId: appInstallationId,
+              type: "single_line_text_field",
+              value: variantId,
+            },
+          ],
+        },
+      },
+    );
+    const saveJson = (await saveResponse.json()) as MetafieldsSetResponse;
+    const saveErrors = saveJson.data?.metafieldsSet?.userErrors ?? [];
+    const saveErrorMessage = getGraphQLErrorMessage(saveErrors, saveJson.errors);
+
+    if (saveErrorMessage || !saveJson.data?.metafieldsSet) {
+      console.error("Unable to save bike shipping packaging variant", {
+        graphQLErrors: saveJson.errors,
+        userErrors: saveErrors,
+      });
+
+      throw new Error(
+        saveErrorMessage ??
+          "Nie udało się zapisać produktu dla opakowania roweru.",
+      );
+    }
   }
 
-  const saveResponse = await admin.graphql(
-    `#graphql
-      mutation BikeShippingPackagingVariantSave(
-        $metafields: [MetafieldsSetInput!]!
-      ) {
-        metafieldsSet(metafields: $metafields) {
-          userErrors {
-            field
-            message
-            code
+  if (price && productId) {
+    const formattedPrice = Number(price).toFixed(2).replace(".", ",");
+    const newTitle = `Dopłata za pakowanie roweru (+${formattedPrice} zł)`;
+    await admin.graphql(
+      `#graphql
+        mutation BikeShippingProductUpdate($id: ID!, $title: String!) {
+          productUpdate(input: { id: $id, title: $title }) {
+            userErrors {
+              field
+              message
+            }
           }
-        }
-      }`,
-    {
-      variables: {
-        metafields: [
-          {
-            namespace: BIKE_SHIPPING_METAFIELD_NAMESPACE,
-            key: BIKE_SHIPPING_PACKAGING_VARIANT_ID_KEY,
-            ownerId: appInstallationId,
-            type: "single_line_text_field",
-            value: variantId,
-          },
-        ],
+        }`,
+      {
+        variables: {
+          id: productId,
+          title: newTitle,
+        },
       },
-    },
-  );
-  const saveJson = (await saveResponse.json()) as MetafieldsSetResponse;
-  const saveErrors = saveJson.data?.metafieldsSet?.userErrors ?? [];
-  const saveErrorMessage = getGraphQLErrorMessage(saveErrors, saveJson.errors);
-
-  if (saveErrorMessage || !saveJson.data?.metafieldsSet) {
-    console.error("Unable to save bike shipping packaging variant", {
-      graphQLErrors: saveJson.errors,
-      userErrors: saveErrors,
-    });
-
-    throw new Error(
-      saveErrorMessage ??
-        "Nie udało się zapisać produktu dla opakowania roweru.",
     );
   }
 
@@ -1155,6 +1190,7 @@ export const action = async ({
       admin,
       appInstallationId,
       savedPackagingVariantId,
+      parsedPrice.price,
     );
     const cartTransformConfigurationValue =
       buildBikeShippingFunctionConfiguration({

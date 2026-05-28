@@ -12,6 +12,22 @@ const NO_CHANGES = {
 };
 
 /**
+ * @param {string} amount
+ * @param {string} currencyCode
+ * @returns {string}
+ */
+function formatPrice(amount, currencyCode) {
+  const num = Number(amount);
+  if (isNaN(num)) return amount;
+
+  if (currencyCode === "PLN") {
+    return num.toFixed(2).replace(".", ",") + " zł";
+  }
+
+  return num.toFixed(2) + " " + currencyCode;
+}
+
+/**
  * @param {RunInput} input
  * @returns {CartTransformRunResult}
  */
@@ -49,12 +65,17 @@ export function cartTransformRun(input) {
     configuration.price * Number(input.presentmentCurrencyRate)
   ).toFixed(2);
 
+  const currencyCode =
+    sourceLine.cost.amountPerQuantity.currencyCode ?? "PLN";
+
+  const priceLabel = formatPrice(packagingPrice, currencyCode);
+
   return {
     operations: [
       {
         lineExpand: {
           cartLineId: sourceLine.id,
-          title: "Rower (z dopłatą za pakowanie)",
+          title: `Rower + pakowanie roweru (+${priceLabel})`,
           expandedCartItems: [
             {
               merchandiseId: sourceLine.merchandise.id,

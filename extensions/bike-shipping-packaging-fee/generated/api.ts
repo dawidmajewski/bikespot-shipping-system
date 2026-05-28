@@ -2981,7 +2981,7 @@ export type RunInputVariables = Exact<{
 }>;
 
 
-export type RunInput = { __typename?: 'Input', presentmentCurrencyRate: any, cart: { __typename?: 'Cart', lines: Array<{ __typename?: 'CartLine', id: string, quantity: number, cost: { __typename?: 'CartLineCost', amountPerQuantity: { __typename?: 'MoneyV2', amount: any } }, merchandise:
+export type RunInput = { __typename?: 'Input', presentmentCurrencyRate: any, cart: { __typename?: 'Cart', lines: Array<{ __typename?: 'CartLine', id: string, quantity: number, cost: { __typename?: 'CartLineCost', amountPerQuantity: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } }, merchandise:
         | { __typename: 'CustomProduct' }
         | { __typename: 'ProductVariant', id: string, product: { __typename?: 'Product', inBikeShippingCollection: boolean } }
        }> }, cartTransform: { __typename?: 'CartTransform', configuration?: { __typename?: 'Metafield', value: string } | null } };
