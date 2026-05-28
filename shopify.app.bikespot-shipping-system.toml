@@ -1,0 +1,19 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "73962b653136fda88944b8131d8ad0a9"
+name = "bikespot-shipping-system"
+application_url = "https://bike-shipping-packaging-fee-production.up.railway.app"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2026-07"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_cart_transforms,read_locations,write_cart_transforms,write_products"
+
+[auth]
+redirect_urls = [ "https://bike-shipping-packaging-fee-production.up.railway.app/api/auth" ]
