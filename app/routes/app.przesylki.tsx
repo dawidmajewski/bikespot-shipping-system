@@ -35,7 +35,7 @@ const BIKE_SHIPPING_CART_TRANSFORM_HANDLE = "bike-shipping-packaging-fee";
 const BIKE_SHIPPING_FUNCTION_CONFIGURATION_NAMESPACE = "$app:bike-shipping";
 const BIKE_SHIPPING_FUNCTION_CONFIGURATION_KEY = "function-configuration";
 const BIKE_SHIPPING_COLLECTION_IDS_VARIABLE = "bikeShippingCollectionIds";
-const BIKE_SHIPPING_PACKAGING_PRODUCT_TITLE = "Opakowanie roweru";
+const BIKE_SHIPPING_PACKAGING_PRODUCT_TITLE = "Dopłata za opakowanie roweru";
 
 type CollectionNode = {
   id: string;

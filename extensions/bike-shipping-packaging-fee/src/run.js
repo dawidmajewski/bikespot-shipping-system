@@ -56,6 +56,12 @@ export function cartTransformRun(input) {
           cartLineId: sourceLine.id,
           expandedCartItems: [
             {
+              attributes: [
+                {
+                  key: "Informacja o wysyłce",
+                  value: "Doliczono dopłatę za opakowanie roweru.",
+                },
+              ],
               merchandiseId: sourceLine.merchandise.id,
               quantity: sourceLine.quantity,
               price: {
