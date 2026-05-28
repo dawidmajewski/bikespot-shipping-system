@@ -409,6 +409,9 @@ const buildBikeShippingFunctionConfiguration = ({
     [BIKE_SHIPPING_COLLECTION_IDS_VARIABLE]: [collectionId],
   });
 
+const PACKAGING_ICON_URL =
+  "https://bike-shipping-packaging-fee-production.up.railway.app/icon-package.svg";
+
 const getPackagingVariantId = async (
   admin: AdminApiContext,
   appInstallationId: string,
@@ -427,6 +430,12 @@ const getPackagingVariantId = async (
               id
               product {
                 id
+                images(first: 5) {
+                  nodes {
+                    url
+                    altText
+                  }
+                }
               }
             }
           }
@@ -442,7 +451,7 @@ const getPackagingVariantId = async (
     if (responseJson.data?.node?.id) {
       variantId = responseJson.data.node.id;
       productId =
-        (responseJson.data.node as { product?: { id: string } }).product?.id;
+        (responseJson.data.node as { product?: { id: string; images?: { nodes: { url: string; altText: string | null }[] } } }).product?.id;
     }
 
     if (responseJson.errors?.length) {
@@ -455,7 +464,7 @@ const getPackagingVariantId = async (
   if (!variantId) {
     const createResponse = await admin.graphql(
       `#graphql
-        mutation BikeShippingPackagingProductCreate($title: String!, $iconDataUri: String!) {
+        mutation BikeShippingPackagingProductCreate($title: String!, $iconUrl: String!) {
           productCreate(
             product: {
               title: $title
@@ -463,7 +472,7 @@ const getPackagingVariantId = async (
               productType: "Shipping fee"
               status: ACTIVE
               tags: ["bike-shipping-packaging-fee"]
-              images: [{ src: $iconDataUri }]
+              images: [{ src: $iconUrl }]
             }
           ) {
             product {
@@ -483,8 +492,7 @@ const getPackagingVariantId = async (
       {
         variables: {
           title: BIKE_SHIPPING_PACKAGING_PRODUCT_TITLE,
-          iconDataUri:
-            "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pg0KPCEtLSBVcGxvYWRlZCB0bzogU1ZHIFJlcG8sIHd3dy5zdmdyZXBvLmNvbSwgR2VuZXJhdG9yOiBTVkcgUmVwbyBNaXhlciBUb29scyAtLT4NCjxzdmcgaGVpZ2h0PSI4MDBweCIgd2lkdGg9IjgwMHB4IiB2ZXJzaW9uPSIxLjEiIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiANCgkgdmlld0JveD0iMCAwIDQ2MCA0NjAiIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPGcgaWQ9IlhNTElEXzExMzVfIj4NCgk8cG9seWdvbiBpZD0iWE1MSURfMTEzNl8iIHN0eWxlPSJmaWxsOiNGQjk5MkQ7IiBwb2ludHM9IjIwMC4wMDIsMjEwIDIzMC4wMDIsNDYwIDQzMC4wMDIsMzQ1IDQzMC4wMDIsMTE1IAkiLz4NCgk8cG9seWdvbiBpZD0iWE1MSURfMTEzN18iIHN0eWxlPSJmaWxsOiNGRkI3Mzk7IiBwb2ludHM9IjIzMC4wMDEsMjAwIDIzMC4wMDEsNDYwIDMwLjAwMSwzNDUgMzAuMDAxLDExNSAJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExMzhfIiBzdHlsZT0iZmlsbDojRkI5OTJEOyIgcG9pbnRzPSIyOS45OTgsMTE1IDk5LjkxMywxNTUuMTk5IDIzMi4zNzMsMTE2LjI4IDI5OS45MDcsNDAuMTkzIDIyOS45OTgsMCAJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExMzlfIiBzdHlsZT0iZmlsbDojRjY3QTIxOyIgcG9pbnRzPSIxNjAuMDk2LDE4OS44MDQgMjI5Ljk5OCwyMzAgNDI5Ljk5OCwxMTUgMzYwLjA5OCw3NC43OTggMjI2LjY1NywxMTQuMjc5IA0KCQkJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExNDBfIiBzdHlsZT0iZmlsbDojRkVFQUMzOyIgcG9pbnRzPSIxNjAuMDk2LDI4OS44MDMgOTkuOTEzLDI1NS4xOTkgOTkuOTEzLDE1NS4xOTkgMTU3LjkyNCwxNTkuNzMgDQoJCTE2MC4wOTYsMTg5LjgwNCAJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExNDFfIiBzdHlsZT0iZmlsbDojRkZENDg4OyIgcG9pbnRzPSI5OS45MTMsMTU1LjE5OSAyOTkuOTA3LDQwLjE5MyAzNjAuMDk4LDc0Ljc5OCAxNjAuMDk2LDE4OS44MDQgCSIvPg0KPC9nPg0KPC9zdmc+",
+          iconUrl: PACKAGING_ICON_URL,
         },
       },
     );
@@ -551,6 +559,37 @@ const getPackagingVariantId = async (
       throw new Error(
         saveErrorMessage ??
           "Nie udało się zapisać produktu dla opakowania roweru.",
+      );
+    }
+  }
+
+  if (productId) {
+    const existingImages =
+      (responseJson.data?.node as { product?: { images?: { nodes: { url: string; altText: string | null }[] } } }).product?.images?.nodes ?? [];
+
+    const hasIconImage = existingImages.some(
+      (img) =>
+        img.url.includes("icon-package") ||
+        img.altText === "Ikona pakowania roweru",
+    );
+
+    if (!hasIconImage) {
+      await admin.graphql(
+        `#graphql
+          mutation BikeShippingProductAddMedia($productId: ID!, $iconUrl: String!) {
+            productCreateMedia(productId: $productId, media: [{ mediaContentType: IMAGE, originalSource: $iconUrl, alt: "Ikona pakowania roweru" }]) {
+              userErrors {
+                field
+                message
+              }
+            }
+          }`,
+        {
+          variables: {
+            productId,
+            iconUrl: PACKAGING_ICON_URL,
+          },
+        },
       );
     }
   }
