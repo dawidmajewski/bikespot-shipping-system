@@ -1,0 +1,24 @@
+api_version = "2026-04"
+
+[[extensions]]
+handle = "bike-shipping-packaging-fee"
+name = "Bike shipping packaging fee"
+description = "Adds bike packaging fee for products from the configured collection."
+uid = "adee1895-c9a4-07fb-9e99-e4ae1b5a0e504899dcbf"
+type = "function"
+
+  [[extensions.targeting]]
+  target = "cart.transform.run"
+  input_query = "src/run.graphql"
+  export = "cart-transform-run"
+
+  [extensions.build]
+  command = ""
+  path = "dist/function.wasm"
+
+  [extensions.input.variables]
+  namespace = "$app:bike-shipping"
+  key = "function-configuration"
+
+  [extensions.ui]
+  enable_create = false
