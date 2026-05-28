@@ -35,7 +35,7 @@ const BIKE_SHIPPING_CART_TRANSFORM_HANDLE = "bike-shipping-packaging-fee";
 const BIKE_SHIPPING_FUNCTION_CONFIGURATION_NAMESPACE = "$app:bike-shipping";
 const BIKE_SHIPPING_FUNCTION_CONFIGURATION_KEY = "function-configuration";
 const BIKE_SHIPPING_COLLECTION_IDS_VARIABLE = "bikeShippingCollectionIds";
-const BIKE_SHIPPING_PACKAGING_PRODUCT_TITLE = "Dopłata za opakowanie roweru";
+const BIKE_SHIPPING_PACKAGING_PRODUCT_TITLE = "Dopłata za pakowanie roweru";
 
 type CollectionNode = {
   id: string;
@@ -445,7 +445,7 @@ const getPackagingVariantId = async (
 
   const createResponse = await admin.graphql(
     `#graphql
-      mutation BikeShippingPackagingProductCreate($title: String!) {
+      mutation BikeShippingPackagingProductCreate($title: String!, $iconDataUri: String!) {
         productCreate(
           product: {
             title: $title
@@ -453,6 +453,7 @@ const getPackagingVariantId = async (
             productType: "Shipping fee"
             status: ACTIVE
             tags: ["bike-shipping-packaging-fee"]
+            images: [{ src: $iconDataUri }]
           }
         ) {
           product {
@@ -471,6 +472,8 @@ const getPackagingVariantId = async (
     {
       variables: {
         title: BIKE_SHIPPING_PACKAGING_PRODUCT_TITLE,
+        iconDataUri:
+          "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pg0KPCEtLSBVcGxvYWRlZCB0bzogU1ZHIFJlcG8sIHd3dy5zdmdyZXBvLmNvbSwgR2VuZXJhdG9yOiBTVkcgUmVwbyBNaXhlciBUb29scyAtLT4NCjxzdmcgaGVpZ2h0PSI4MDBweCIgd2lkdGg9IjgwMHB4IiB2ZXJzaW9uPSIxLjEiIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiANCgkgdmlld0JveD0iMCAwIDQ2MCA0NjAiIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPGcgaWQ9IlhNTElEXzExMzVfIj4NCgk8cG9seWdvbiBpZD0iWE1MSURfMTEzNl8iIHN0eWxlPSJmaWxsOiNGQjk5MkQ7IiBwb2ludHM9IjIwMC4wMDIsMjEwIDIzMC4wMDIsNDYwIDQzMC4wMDIsMzQ1IDQzMC4wMDIsMTE1IAkiLz4NCgk8cG9seWdvbiBpZD0iWE1MSURfMTEzN18iIHN0eWxlPSJmaWxsOiNGRkI3Mzk7IiBwb2ludHM9IjIzMC4wMDEsMjAwIDIzMC4wMDEsNDYwIDMwLjAwMSwzNDUgMzAuMDAxLDExNSAJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExMzhfIiBzdHlsZT0iZmlsbDojRkI5OTJEOyIgcG9pbnRzPSIyOS45OTgsMTE1IDk5LjkxMywxNTUuMTk5IDIzMi4zNzMsMTE2LjI4IDI5OS45MDcsNDAuMTkzIDIyOS45OTgsMCAJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExMzlfIiBzdHlsZT0iZmlsbDojRjY3QTIxOyIgcG9pbnRzPSIxNjAuMDk2LDE4OS44MDQgMjI5Ljk5OCwyMzAgNDI5Ljk5OCwxMTUgMzYwLjA5OCw3NC43OTggMjI2LjY1NywxMTQuMjc5IA0KCQkJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExNDBfIiBzdHlsZT0iZmlsbDojRkVFQUMzOyIgcG9pbnRzPSIxNjAuMDk2LDI4OS44MDMgOTkuOTEzLDI1NS4xOTkgOTkuOTEzLDE1NS4xOTkgMTU3LjkyNCwxNTkuNzMgDQoJCTE2MC4wOTYsMTg5LjgwNCAJIi8+DQoJPHBvbHlnb24gaWQ9IlhNTElEXzExNDFfIiBzdHlsZT0iZmlsbDojRkZENDg4OyIgcG9pbnRzPSI5OS45MTMsMTU1LjE5OSAyOTkuOTA3LDQwLjE5MyAzNjAuMDk4LDc0Ljc5OCAxNjAuMDk2LDE4OS44MDQgCSIvPg0KPC9nPg0KPC9zdmc+",
       },
     },
   );
