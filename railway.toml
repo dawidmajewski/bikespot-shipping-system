@@ -6,4 +6,4 @@
 [railway.deploy]
   startCommand = "npm run docker-start"
   healthCheckPath = "/health"
-  port = 8080
+  port = 80

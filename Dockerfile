@@ -1,7 +1,7 @@
 FROM node:20-alpine
 RUN apk add --no-cache openssl
 
-EXPOSE 8080
+EXPOSE 80
 
 WORKDIR /app
 
