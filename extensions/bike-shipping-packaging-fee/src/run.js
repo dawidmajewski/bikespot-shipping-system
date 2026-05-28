@@ -38,57 +38,45 @@ export function cartTransformRun(input) {
     configuration.price * Number(input.presentmentCurrencyRate)
   ).toFixed(2);
 
-  const operations = bikeLines.map((bikeLine) => {
-    if (bikeLine.merchandise.__typename !== "ProductVariant") {
-      return null;
-    }
+  const formattedPrice = Number(packagingPrice).toFixed(2).replace(".", ",");
+    const title = `Dopłata za pakowanie roweru (+${formattedPrice} zł)`;
 
-    return {
-      lineExpand: {
-        cartLineId: bikeLine.id,
-        expandedCartItems: [
-          {
-            attributes: [
-              {
-                key: "Dopłata za pakowanie",
-                value: `+${packagingPrice} zł`,
-              },
-              {
-                key: "_bike_shipping_packaging_fee",
-                value: "true",
-              },
-            ],
-            merchandiseId: bikeLine.merchandise.id,
-            quantity: bikeLine.quantity,
-            price: {
-              adjustment: {
-                fixedPricePerUnit: {
-                  amount: bikeLine.cost.amountPerQuantity.amount,
+    const operations = bikeLines.map((bikeLine) => {
+      if (bikeLine.merchandise.__typename !== "ProductVariant") {
+        return null;
+      }
+
+      return {
+        lineExpand: {
+          cartLineId: bikeLine.id,
+          title,
+          expandedCartItems: [
+            {
+              merchandiseId: bikeLine.merchandise.id,
+              quantity: bikeLine.quantity,
+              price: {
+                adjustment: {
+                  fixedPricePerUnit: {
+                    amount: bikeLine.cost.amountPerQuantity.amount,
+                  },
                 },
               },
             },
-          },
-          {
-            attributes: [
-              {
-                key: "_bike_shipping_packaging_fee",
-                value: "true",
-              },
-            ],
-            merchandiseId: configuration.packagingVariantId,
-            quantity: bikeLine.quantity,
-            price: {
-              adjustment: {
-                fixedPricePerUnit: {
-                  amount: packagingPrice,
+            {
+              merchandiseId: configuration.packagingVariantId,
+              quantity: bikeLine.quantity,
+              price: {
+                adjustment: {
+                  fixedPricePerUnit: {
+                    amount: packagingPrice,
+                  },
                 },
               },
             },
-          },
-        ],
-      },
-    };
-  }).filter(Boolean);
+          ],
+        },
+      };
+    }).filter(Boolean);
 
   if (operations.length === 0) return NO_CHANGES;
 
