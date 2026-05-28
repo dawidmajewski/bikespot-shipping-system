@@ -2,7 +2,7 @@
 
 client_id = "a066dbdd07f2b57f174d67869ae78adb"
 name = "bikespot-shipping-system"
-application_url = "https://example.com"
+application_url = "https://bike-shipping-packaging-fee-production.up.railway.app"
 embedded = true
 
 [build]
@@ -24,4 +24,4 @@ api_version = "2026-07"
 scopes = "write_products,read_locations,read_cart_transforms,write_cart_transforms"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://bike-shipping-packaging-fee-production.up.railway.app/api/auth" ]
