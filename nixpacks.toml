@@ -1,0 +1,1 @@
+{ "build": { "nixpacksPlan": { "providers": ["nodejs"], "nodeVersion": "20" } }, "deploy": { "startCommand": "npm run docker-start", "healthCheckPath": "/health", "port": 8080 } }

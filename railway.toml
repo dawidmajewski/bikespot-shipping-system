@@ -1,0 +1,9 @@
+[railway]
+  schemaVersion = 7
+  builder = "docker"
+  dockerfilePath = "Dockerfile"
+
+[railway.deploy]
+  startCommand = "npm run docker-start"
+  healthCheckPath = "/health"
+  port = 8080
